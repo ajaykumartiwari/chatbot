@@ -4,6 +4,11 @@ import json
 import random
 import string
 import warnings
+import pandas as pd 
+import os
+# import xlrd 
+# import openpyxl
+import requests
 
 import nltk
 import numpy as np
@@ -17,6 +22,7 @@ stopwords.words('english')
 
 from resources.Greetings import greeting
 from resources.stopwords import tokenized_user_request
+from resources.apiConfig import config
 # from resources.ChatbotImpl import response
 from resources.botImpl import response
 
@@ -28,16 +34,16 @@ warnings.filterwarnings("ignore")
 app = Flask(__name__)
 
 # Set secret access key
-#app.secret_key = os.urandom(24)
+app.secret_key = os.urandom(24)
 
 CORS(app, support_credentials=True)
 app.config['CORS_HEADERS'] = 'Content-Type'
-
+@cross_origin(origin='*')
 #cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 @app.route('/chatbot',methods = ['POST', 'GET'])
-@cross_origin(origin='*')
 def chatbot():
+    
     print("Mehtod begining")
     data = request.get_json()
     message = data['message']
@@ -76,6 +82,49 @@ def chatbot():
 def jsonResponse(user_request):
     return jsonify(message=user_request)
 
+
+@app.route('/login', methods=['POST'])
+def login():
+    #loc = pd.read_csv("userdata.xlsx") 
+    print("======================================================>>>>>>>>>>>>>>>>>>>>")
+    data = pd.read_csv('User.csv')
+
+    username = data['username'].values
+    password = data['password'].values
+    pas = ''.join(map(str, password))
+    print("printing data===>",username, type(pas),pas)
+    login_data = request.get_json()
+    uname = login_data['username']
+    passw = login_data['password'] 
+    if(username == uname and pas == passw):
+        print("Login Data =======================> ", uname, passw)
+        session['logged_in'] = True
+        print("Session Data======>",session)
+        print(config())
+        userdata = config()
+        print("User Details =============>",userdata)
+        status = True
+        return jsonResponse(userdata)
+    else:
+        status = False
+        return jsonResponse("Invalid Credentials! please try again")
+
+
+    
+    # json_data = request.json
+    # user = User.query.filter_by(username=json_data['username']).first()
+    # if user and bcrypt.check_password_hash(
+    #         user.password, json_data['password']):
+    #     session['logged_in'] = True
+    #     status = True
+    # else:
+    #     status = False
+    # return jsonify({'result': status})
+
+@app.route('/api/logout')
+def logout():
+    session.pop('logged_in', None)
+    return jsonify({'result': 'success'})
 
 if __name__ == '__main__':
     app.run()
