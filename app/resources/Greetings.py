@@ -10,7 +10,7 @@ import random
 import string
 
 
-GREETING_INPUTS = ("hello", "hi", "greetings", "sup", "what's up","hey")
+GREETING_INPUTS = ("hello", "hi", "greetings", "sup", "what's up","hey","how are you")
 GREETING_RESPONSES = ["hi", "hey","Good Morning", "*nods*", "hi there", "hello", "I am glad! You are talking to me"]
 
 # Checking for greetings

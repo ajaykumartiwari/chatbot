@@ -6,8 +6,7 @@ import string
 import warnings
 import pandas as pd 
 import os
-# import xlrd 
-# import openpyxl
+import matplotlib.pyplot as plt
 import requests
 
 import nltk
@@ -22,7 +21,7 @@ stopwords.words('english')
 
 from resources.Greetings import greeting
 from resources.stopwords import tokenized_user_request
-from resources.apiConfig import config
+from resources.apiConfig import config, update
 # from resources.ChatbotImpl import response
 from resources.botImpl import response
 
@@ -30,12 +29,14 @@ from resources.botImpl import response
 #from DbConfig.connection import getAllRecords
 from chatterbot import ChatBot
 warnings.filterwarnings("ignore")
+plt.figure(figsize=(30, 20))
 
 app = Flask(__name__)
 
 # Set secret access key
 app.secret_key = os.urandom(24)
-
+access_token = app.secret_key
+print("Secret key ==============>", access_token)
 CORS(app, support_credentials=True)
 app.config['CORS_HEADERS'] = 'Content-Type'
 @cross_origin(origin='*')
@@ -51,8 +52,11 @@ def chatbot():
 
     user_response = tokenized_user_request(message)
 
-    if(user_response == 'account'):
+    if(user_response == 'account' or user_response == 'balance' or user_response == 'summary' or user_response == 'showaccountbalance' or user_response == 'displayaccountbalance' or user_response == 'accountbalance' or user_response == 'login'):
         return jsonResponse("login")
+
+    if(user_response == 'update'):
+        return jsonResponse("update")
 
     #print("Final data ========= >",user_response)
 
@@ -85,32 +89,82 @@ def jsonResponse(user_request):
 
 @app.route('/login', methods=['POST'])
 def login():
+    
     #loc = pd.read_csv("userdata.xlsx") 
     print("======================================================>>>>>>>>>>>>>>>>>>>>")
-    data = pd.read_csv('User.csv')
+    data = pd.read_csv('D:\chatbot_file\Data.csv')
 
-    username = data['username'].values
-    password = data['password'].values
-    pas = ''.join(map(str, password))
-    print("printing data===>",username, type(pas),pas)
+    # username = data['Login ID'].values
+    # password = data['Password'].values
+    
+    #pas = ''.join(map(str, password))
+    #print("printing data===>",username, type(pas),pas)
     login_data = request.get_json()
     uname = login_data['username']
     passw = login_data['password'] 
-    if(username == uname and pas == passw):
-        print("Login Data =======================> ", uname, passw)
-        session['logged_in'] = True
-        print("Session Data======>",session)
-        print(config())
-        userdata = config()
-        print("User Details =============>",userdata)
-        status = True
-        return jsonResponse(userdata)
+
+    for index, row in data.iterrows():
+        print("Matching Row Data =============>",row)
+        if(row['Login ID'] == uname and row['Password'] == passw):
+            print("Matching Row Data =============>",row)
+            f= open("D:\chatbot_file\chat.txt","w+")
+            user_input = json.dumps(login_data)
+            if(user_input != ''):
+                f.write(user_input)
+            #f= open("\\BLR26014TEAM1\\Erste\\test.txt","w+")
+            f.close()
+            print("Login Data =======================> ", uname, passw)
+            session['logged_in'] = True
+            print("Session Data======>",session)
+            
+            # External Api Call and Accound Data display 
+            # print(config())
+            #userdata = config()
+            userdata = {'id': row['Account Number'], 'name': row['Acc Holder Name'], 'balance': row['Account Balance']}
+            print("User Details =============>",userdata)
+
+            # ===========================================
+            status = True
+            return jsonify({'result': userdata},)
+        # else:
+        #     status = False
+        #     return jsonResponse("Invalid Credentials! please try again")
     else:
         status = False
         return jsonResponse("Invalid Credentials! please try again")
 
+@app.route('/update', methods=['GET','POST','PUT'])
+def update():
 
-    
+    print("Inside Update Method")
+    data = request.get_json()
+    print("Update Data ============ >", data, type(data))
+    userId = data['userId']
+    name = data['name']
+    addressLine1 = data['addressLine1']
+    addressLine2 = data['addressLine2']
+    city = data['city']
+    state = data['state']
+    country = data['country']
+    zipcode = data['zipcode']
+
+    #udf = pd.DataFrame([data])
+
+    #writer = pd.ExcelWriter('customer_details.xlsx', engine='xlsxwriter')
+    # udf.to_excel(writer, sheet_name='Customer Details')
+    # writer.save()
+
+    with open('Customer_Details.csv', mode='w') as csv_file:
+        fieldnames = ['userId', 'name', 'addressLine1','addressLine2','city','state','country','zipcode']
+        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+
+        writer.writeheader()
+        #{'emp_name': 'John Smith', 'dept': 'Accounting', 'birth_month': 'November'}
+        writer.writerow(data)
+
+    # updateUser = update()
+    print("Update Data=========>", data)
+    return jsonify("User Update Successfully!")
     # json_data = request.json
     # user = User.query.filter_by(username=json_data['username']).first()
     # if user and bcrypt.check_password_hash(
@@ -128,3 +182,12 @@ def logout():
 
 if __name__ == '__main__':
     app.run()
+
+
+
+
+
+
+
+
+

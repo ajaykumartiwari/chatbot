@@ -3,7 +3,7 @@ import json
 import random
 import string
 import warnings
-
+from nltk.corpus import wordnet as wn
 import nltk
 import numpy as np
 from flask_cors import CORS, cross_origin  # Access Cross origin from angular
@@ -32,14 +32,21 @@ def tokenized_user_request(message):
     final_token = []
     for key,val in freq.items(): 
         print ("After removing stopwords =========== > ",str(key) + ':' + str(val))
-        final_token.append(key,)
-        print("Final Token Data ============= >",type(final_token), val)
+        final_token.append(key)
+        print("Final Token Data ============= >",type(final_token), final_token)
     tup = tuple(final_token)
     
-    # print("Tuple Is ============> ", tup)
-    # is_noun = lambda pos: pos[:2] == 'NN'
-    # nouns = [word for (word, pos) in nltk.pos_tag(tup) if is_noun(pos)] 
-    # # nouns = [ent.text for ent in nlp(txt) if ent.pos_ == 'NOUN']
-    # print("noun ============> ", nouns)
-    tokenized_word = ''.join(tup)
+    print("Tuple Is ============> ", tup)
+    is_noun = lambda pos: pos[:2] == 'NN'
+    nouns = [word for (word, pos) in nltk.pos_tag(tup) if is_noun(pos)] 
+
+    # for w in nouns:
+    #     tmp = wn.synsets(w)[0].pos()
+    #     print(w, ":", tmp)
+    # nouns = [ent.text for ent in nlp(txt) if ent.pos_ == 'NOUN']
+    print("noun ============> ", nouns)
+    #tokenized_word = ''.join(tup)
+    #tokenized_word = nouns[0]
+    tokenized_word = ''.join(nouns)
+    print("Final tokenised word ======== > ",tokenized_word)
     return tokenized_word
