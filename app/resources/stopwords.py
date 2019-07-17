@@ -47,6 +47,11 @@ def tokenized_user_request(message):
     print("noun ============> ", nouns)
     #tokenized_word = ''.join(tup)
     #tokenized_word = nouns[0]
+    if( nouns == [] ):
+        tup_words = ''.join(tup)
+        print("Final tokenised word ======== > ", tup_words)
+        return tup_words
+    
     tokenized_word = ''.join(nouns)
     print("Final tokenised word ======== > ",tokenized_word)
     return tokenized_word

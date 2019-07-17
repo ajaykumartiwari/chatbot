@@ -68,17 +68,6 @@ if(flag == 1):
 
     #Downloading WordNet lemmatizer
     lemmatizer = WordNetLemmatizer()
-    '''
-    Implement a deeper NLP pipeline to extract semantically rich features from the FAQs and Answers
-    o Tokenize the FAQs and Answers into sentences and words
-    o Remove stop-words
-    o Lemmatize the words to extract lemmas as features
-    o Stem the words to extract stemmed words as features
-    o Part-of-speech (POS) tag the words to extract POS tag features
-    o Perform dependency parsing or full-syntactic parsing to parse-tree based patterns as features
-    o Using WordNet, extract hypernymns, hyponyms, meronyms, AND holonyms as
-    features
-    '''
 
     #Take the Question and Answers from the whole FAQ data and do the below specified functions
 
@@ -215,7 +204,7 @@ if(flag == 1):
     # In[6]:
 
     faq_corpus = []
-    for text in range(56):
+    for text in range(66):
         faq_corpus.append(FAQ_data(question[text], answer[text]))
 
     print("Tokenized successully")
@@ -230,7 +219,7 @@ if(flag == 1):
         
             #user_query = input("For help menu: Enter jarvis \nEnter your question:\n")
             print("********************************************************")
-            options = "Manual: \nfaq: Show original data"+"\nbow: Bag of Words"+"\ncount: Show the count"+"\nfeature: Show all the features"
+            options = "Manual: \n faq: Show original data"+"\n bow: Bag of Words"+"\n count: Show the count"+"\n feature: Show all the features"
             if user_query == "jarvis":
                 print(options)
                 return "Please See the Log"

@@ -41,7 +41,6 @@ CORS(app, support_credentials=True)
 app.config['CORS_HEADERS'] = 'Content-Type'
 @cross_origin(origin='*')
 #cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
-
 @app.route('/chatbot',methods = ['POST', 'GET'])
 def chatbot():
     
@@ -51,12 +50,13 @@ def chatbot():
     print("Message ===========> ", message)
 
     user_response = tokenized_user_request(message)
+    
+    if(user_response == 'account' or user_response == 'balance' or user_response == 'summary' or user_response == 'showaccountbalance' or user_response == 'displayaccountbalance' or user_response == 'accountbalance' or user_response == 'login' or user_response == 'showbalance' or user_response == 'displaybalance' or user_response == 'wantlogin'):
+       return jsonResponse("login modal")
 
-    if(user_response == 'account' or user_response == 'balance' or user_response == 'summary' or user_response == 'showaccountbalance' or user_response == 'displayaccountbalance' or user_response == 'accountbalance' or user_response == 'login'):
-        return jsonResponse("login")
-
-    if(user_response == 'update'):
-        return jsonResponse("update")
+    if(user_response == 'update' or user_response == 'updateaddress' or user_response == 'displayaddress' or user_response == 'editaddress' or user_response == 'address' or user_response == 'edit'):
+        #updateUser = getUserAddress(uname)
+        return jsonResponse("update modal")
 
     #print("Final data ========= >",user_response)
 
@@ -83,16 +83,16 @@ def chatbot():
             print("ROBO: Bye! take care..")
 
 # Convert String into JSON format
-def jsonResponse(user_request):
+def jsonResponse(user_request):    
     return jsonify(message=user_request)
-
 
 @app.route('/login', methods=['POST'])
 def login():
-    
     #loc = pd.read_csv("userdata.xlsx") 
+    
     print("======================================================>>>>>>>>>>>>>>>>>>>>")
     data = pd.read_csv('D:\chatbot_file\Data.csv')
+    #data = pd.read_csv(r'\\BLR26014TEAM1\Erste\Data.csv')
 
     # username = data['Login ID'].values
     # password = data['Password'].values
@@ -106,36 +106,35 @@ def login():
     for index, row in data.iterrows():
         print("Matching Row Data =============>",row)
         if(row['Login ID'] == uname and row['Password'] == passw):
-            print("Matching Row Data =============>",row)
-            f= open("D:\chatbot_file\chat.txt","w+")
+            status=True
+            print("Matching Row Data successfully...")
+            #f= open("D:\chatbot_file\chat.txt","w+")
+            #f= open(r'\\BLR26014TEAM1\Erste\chat.txt',"w+")
             user_input = json.dumps(login_data)
-            if(user_input != ''):
-                f.write(user_input)
-            #f= open("\\BLR26014TEAM1\\Erste\\test.txt","w+")
-            f.close()
+            uname = row['Login ID']
+            passw = row['Password']
+            # if(user_input != ''):      
+            #     f.write(uname)
+            #     #f.write(passw)
+            # #f= open("\\BLR26014TEAM1\\Erste\\test.txt","w+")
+            # f.close()
             print("Login Data =======================> ", uname, passw)
             session['logged_in'] = True
             print("Session Data======>",session)
             
-            # External Api Call and Accound Data display 
-            # print(config())
-            #userdata = config()
-            userdata = {'id': row['Account Number'], 'name': row['Acc Holder Name'], 'balance': row['Account Balance']}
+            # External Api Call and Display account data from Data.csv file when login successfull
+            userdata = {'userId': uname, 'id': row['Account Number'], 'name': row['Acc Holder Name'], 'balance': row['Account Balance']}
             print("User Details =============>",userdata)
-
-            # ===========================================
-            status = True
             return jsonify({'result': userdata},)
         # else:
-        #     status = False
+        #     status=False
         #     return jsonResponse("Invalid Credentials! please try again")
     else:
         status = False
-        return jsonResponse("Invalid Credentials! please try again")
+        return jsonResponse("Invalid User")
 
 @app.route('/update', methods=['GET','POST','PUT'])
 def update():
-
     print("Inside Update Method")
     data = request.get_json()
     print("Update Data ============ >", data, type(data))
@@ -148,32 +147,50 @@ def update():
     country = data['country']
     zipcode = data['zipcode']
 
-    #udf = pd.DataFrame([data])
-
-    #writer = pd.ExcelWriter('customer_details.xlsx', engine='xlsxwriter')
-    # udf.to_excel(writer, sheet_name='Customer Details')
-    # writer.save()
-
     with open('Customer_Details.csv', mode='w') as csv_file:
+    #with open(r'\\BLR26014TEAM1\Erste\Customer_Details.csv', "w+") as csv_file:
         fieldnames = ['userId', 'name', 'addressLine1','addressLine2','city','state','country','zipcode']
         writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
-
         writer.writeheader()
         #{'emp_name': 'John Smith', 'dept': 'Accounting', 'birth_month': 'November'}
         writer.writerow(data)
 
-    # updateUser = update()
-    print("Update Data=========>", data)
-    return jsonify("User Update Successfully!")
-    # json_data = request.json
-    # user = User.query.filter_by(username=json_data['username']).first()
-    # if user and bcrypt.check_password_hash(
-    #         user.password, json_data['password']):
-    #     session['logged_in'] = True
-    #     status = True
-    # else:
-    #     status = False
-    # return jsonify({'result': status})
+    #======================= Fetching Updeted User Address Details =============================#
+    data = pd.read_csv('Customer_details.csv')
+    #data = pd.read_csv(r'\\BLR26014TEAM1\Erste\Customer_details.csv')
+    
+    for index, row in data.iterrows():
+        print("Matching Row Data =============>",row)
+        if(userId == row['userId']):
+            print("Matching  =============>",row)
+            userUpdatedAddress = {'id': row['userId'], 'name': row['name'], 'addressLine1': row['addressLine1'],'addressLine2': row['addressLine2'],
+            'city': row['city'], 'state': row['state'], 'country': row['country'], 'zipcode': row['zipcode']}
+            #f= open(r'\\BLR26014TEAM1\Erste\address.txt',"w+")
+            f= open(r'D:\chatbot_file\address.txt',"w+")
+            add1 = userUpdatedAddress['addressLine1']
+            add2 = userUpdatedAddress['addressLine2']
+            city = userUpdatedAddress['city']
+            state = userUpdatedAddress['state']
+            country = userUpdatedAddress['country']
+            zipcode = userUpdatedAddress['zipcode']
+            if(userUpdatedAddress != ''):      
+                f.write(str(add1) +","+ str(add2) +","+str(city) +","+str(state) +","+str(country) +","+str(zipcode))
+            print("Updated Data=========>", row)
+            return jsonify({'result': userUpdatedAddress},)
+
+# @app.route('/getUser',methods = ['POST', 'GET'])
+# def getUserAddress(uname):
+#     data = pd.read_csv('Customer_details.csv')
+    
+#     for index, row in data.iterrows():
+#         print("Matching Row Data =============>",row)
+#         if(uname == row['userId']):
+#             print("Matching  =============>",row)
+#             userAddress = {'id': uname, 'name': row['name'], 'addressLine1': row['addressLine1'],'addressLine1': row['addressLine1'],
+#             'city': row['city'], 'state': row['state'], 'country': row['country'], 'zipcode': row['zipcode']}
+#             print("User Details =============>",userdata)
+#             # ===========================================
+#             return userAddress
 
 @app.route('/api/logout')
 def logout():
@@ -181,8 +198,8 @@ def logout():
     return jsonify({'result': 'success'})
 
 if __name__ == '__main__':
-    app.run()
-
+    app.run(host='10.6.184.194')
+#app.run(host='10.6.184.194')
 
 
 
