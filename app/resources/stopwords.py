@@ -37,21 +37,21 @@ def tokenized_user_request(message):
     tup = tuple(final_token)
     
     print("Tuple Is ============> ", tup)
-    is_noun = lambda pos: pos[:2] == 'NN'
-    nouns = [word for (word, pos) in nltk.pos_tag(tup) if is_noun(pos)] 
+    # is_noun = lambda pos: pos[:2] == 'NN'
+    # nouns = [word for (word, pos) in nltk.pos_tag(tup) if is_noun(pos)] 
 
     # for w in nouns:
     #     tmp = wn.synsets(w)[0].pos()
     #     print(w, ":", tmp)
     # nouns = [ent.text for ent in nlp(txt) if ent.pos_ == 'NOUN']
-    print("noun ============> ", nouns)
+    # print("noun ============> ", nouns)
     #tokenized_word = ''.join(tup)
     #tokenized_word = nouns[0]
-    if( nouns == [] ):
-        tup_words = ''.join(tup)
-        print("Final tokenised word ======== > ", tup_words)
-        return tup_words
+    # if( nouns == [] ):
+    #     tup_words = ''.join(tup)
+    #     print("Final tokenised word ======== > ", tup_words)
+    #     return tup_words
     
-    tokenized_word = ''.join(nouns)
+    tokenized_word = ' '.join(tup)
     print("Final tokenised word ======== > ",tokenized_word)
     return tokenized_word

@@ -204,7 +204,7 @@ if(flag == 1):
     # In[6]:
 
     faq_corpus = []
-    for text in range(66):
+    for text in range(70):
         faq_corpus.append(FAQ_data(question[text], answer[text]))
 
     print("Tokenized successully")

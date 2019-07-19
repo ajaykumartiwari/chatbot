@@ -27,7 +27,7 @@ from resources.botImpl import response
 
 """ Mongodb Connection File """
 #from DbConfig.connection import getAllRecords
-from chatterbot import ChatBot
+# from chatterbot import ChatBot
 warnings.filterwarnings("ignore")
 plt.figure(figsize=(30, 20))
 
@@ -91,7 +91,7 @@ def login():
     #loc = pd.read_csv("userdata.xlsx") 
     
     print("======================================================>>>>>>>>>>>>>>>>>>>>")
-    data = pd.read_csv('D:\chatbot_file\Data.csv')
+    data = pd.read_csv('D:\Erste POC\chatbot_improvemnt\Data.csv')
     #data = pd.read_csv(r'\\BLR26014TEAM1\Erste\Data.csv')
 
     # username = data['Login ID'].values
@@ -132,6 +132,43 @@ def login():
     else:
         status = False
         return jsonResponse("Invalid User")
+
+@app.route('/getOtp', methods=['POST'])
+def getOtp():
+    #loc = pd.read_csv("userdata.xlsx") 
+    
+    print("======================================================>>>>>>>>>>>>>>>>>>>>")
+    data = pd.read_csv('D:\Erste POC\chatbot_improvemnt\Otp_validation_01.csv')
+    user_otp_data = request.get_json()
+
+    mobileNumber = user_otp_data['mobileNumber']
+    print("mobileNumber---->", mobileNumber)
+    
+
+    for index, row in data.iterrows():
+        print("Matching Row Data =============>",row)
+        if(row['Mobile Number'] == mobileNumber):
+            status=True
+            print("Matching Row Data found successfully...")
+            user_input = json.dumps(user_otp_data)
+
+            mobileNumber = row['Mobile Number']
+            otp = row['OTP']
+            print("OTP Data =======================> ", mobileNumber, otp)
+            session['logged_in'] = True
+            print("Session Data======>",session)
+            
+            # External Api Call and Display account data from Data.csv file when login successfull
+            otpDataRto = {'mobileNumber': mobileNumber, 'otpNumber': otp}
+            # userdata = {'userId': uname, 'id': row['Account Number'], 'name': row['Acc Holder Name'], 'balance': row['Account Balance']}
+            print("otp Details =============>",otpDataRto)
+            return jsonify({'result': otpDataRto},)
+        # else:
+        #     status=False
+        #     return jsonResponse("Invalid Credentials! please try again")
+    else:
+        status = False
+        return jsonResponse("Mobile number is not registered,Please entyer registered mobile number ")
 
 @app.route('/update', methods=['GET','POST','PUT'])
 def update():
@@ -198,7 +235,7 @@ def logout():
     return jsonify({'result': 'success'})
 
 if __name__ == '__main__':
-    app.run(host='10.6.184.194')
+    app.run(host='localhost')
 #app.run(host='10.6.184.194')
 
 
