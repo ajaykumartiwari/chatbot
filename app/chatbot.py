@@ -8,6 +8,7 @@ import pandas as pd
 import os
 import matplotlib.pyplot as plt
 import requests
+import re
 
 import nltk
 import numpy as np
@@ -43,15 +44,44 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 #cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 @app.route('/chatbot',methods = ['POST', 'GET'])
 def chatbot():
-    
+    # patter to validate mobile number
+    Pattern = re.compile("(0/91)?[7-9][0-9]{9}")
+
     print("Mehtod begining")
     data = request.get_json()
     message = data['message']
     print("Message ===========> ", message)
 
     user_response = tokenized_user_request(message)
-    
-    if(user_response == 'account' or user_response == 'balance' or user_response == 'summary' or user_response == 'showaccountbalance' or user_response == 'displayaccountbalance' or user_response == 'accountbalance' or user_response == 'login' or user_response == 'showbalance' or user_response == 'displaybalance' or user_response == 'wantlogin'):
+    user_res = str(user_response)
+
+    # mobile number validation
+    print("Pattern.match(user_res)- ",Pattern.match(user_res)," len(user_res)- ",len(user_res) == 10, " user_res.isdigit()",user_res.isdigit())
+    if(len(user_res) == 10 and user_res.isdigit()):
+        print("valid mobile number")
+        resposne = getOtp(user_res)
+        otpFlag = True
+        global validMobileNumber 
+        validMobileNumber = user_res
+        if(response is None ):
+            return jsonResponse(resposne)
+        else:
+           return jsonResponse("valid number")
+
+    # Otp validation
+    if(len(user_res) == 4 and user_res.isdigit()):
+        if(user_res == "1111"):
+            print("valid otp number")
+            print("validMobileNumber  -> ",validMobileNumber)
+            # varifyOtp(user_res)
+            accountDetailsData = accountDetails()
+            print("response to ui accountDetailsData-->",accountDetailsData,"  ",type(accountDetailsData))
+            return jsonify({'result': accountDetailsData, 'message': "account details"})
+        else :
+            return jsonResponse("inValid otp")
+
+
+    if(user_response == 'account' or user_response == 'balance' or user_response == 'show my balance' or user_response == 'summary' or user_response == 'show account balance' or user_response == 'display account balance' or user_response == 'account balance' or user_response == 'login' or user_response == 'show balance' or user_response == 'display balance' or user_response == 'want login'):
        return jsonResponse("login modal")
 
     if(user_response == 'update' or user_response == 'updateaddress' or user_response == 'displayaddress' or user_response == 'editaddress' or user_response == 'address' or user_response == 'edit'):
@@ -70,9 +100,6 @@ def chatbot():
             else:
                 if(greeting(user_response)!=None):
                     print("ROBO: "+greeting(user_response))
-                    # res = connect(user_response)
-                    # print("Db Response ",res['answer'])
-                    # answer = res['answer']
                     return jsonResponse(greeting(user_response))
                 else:
                     print("ROBO: ",end="")
@@ -92,13 +119,6 @@ def login():
     
     print("======================================================>>>>>>>>>>>>>>>>>>>>")
     data = pd.read_csv('D:\Erste POC\chatbot_improvemnt\Data.csv')
-    #data = pd.read_csv(r'\\BLR26014TEAM1\Erste\Data.csv')
-
-    # username = data['Login ID'].values
-    # password = data['Password'].values
-    
-    #pas = ''.join(map(str, password))
-    #print("printing data===>",username, type(pas),pas)
     login_data = request.get_json()
     uname = login_data['username']
     passw = login_data['password'] 
@@ -112,49 +132,52 @@ def login():
             #f= open(r'\\BLR26014TEAM1\Erste\chat.txt',"w+")
             user_input = json.dumps(login_data)
             uname = row['Login ID']
-            passw = row['Password']
-            # if(user_input != ''):      
-            #     f.write(uname)
-            #     #f.write(passw)
-            # #f= open("\\BLR26014TEAM1\\Erste\\test.txt","w+")
-            # f.close()
+            passw = row['Password']    
+       
             print("Login Data =======================> ", uname, passw)
             session['logged_in'] = True
             print("Session Data======>",session)
             
             # External Api Call and Display account data from Data.csv file when login successfull
-            userdata = {'userId': uname, 'id': row['Account Number'], 'name': row['Acc Holder Name'], 'balance': row['Account Balance']}
+            userdata = {'userId': row['Login ID'], 'id': row['Account Number'], 'name': row['Acc Holder Name'], 'balance': row['Account Balance']}
             print("User Details =============>",userdata)
             return jsonify({'result': userdata},)
-        # else:
-        #     status=False
-        #     return jsonResponse("Invalid Credentials! please try again")
     else:
         status = False
         return jsonResponse("Invalid User")
+def accountDetails():
+    data = pd.read_csv('D:\Erste POC\chatbot_improvemnt\Data.csv')
 
-@app.route('/getOtp', methods=['POST'])
-def getOtp():
+    for index, row in data.iterrows():
+        if(str(row['Mobile Number']) == validMobileNumber):
+            status=True
+            print("Matching Row Data successfully...")
+            session['logged_in'] = True
+            # External Api Call and Display account data from Data.csv file when login successfull
+            userdata = {'userId': row['Login ID'], 'id': row['Account Number'], 'name': row['Acc Holder Name'], 'balance': row['Account Balance']}
+            print("User Details =============>",userdata)
+            return userdata
+
+
+# @app.route('/getOtp', methods=['POST'])
+def getOtp(user_res):
     #loc = pd.read_csv("userdata.xlsx") 
     
     print("======================================================>>>>>>>>>>>>>>>>>>>>")
     data = pd.read_csv('D:\Erste POC\chatbot_improvemnt\Otp_validation_01.csv')
-    user_otp_data = request.get_json()
-
-    mobileNumber = user_otp_data['mobileNumber']
-    print("mobileNumber---->", mobileNumber)
+    # user_otp_data = request.get_json()
+    print("user_res in getOtop()-- ",user_res)
+    user_otp_data = user_res
+    mobileNumber = user_otp_data
     
-
     for index, row in data.iterrows():
-        print("Matching Row Data =============>",row)
-        if(row['Mobile Number'] == mobileNumber):
+        if(str(row['Mobile Number']) == mobileNumber):
             status=True
-            print("Matching Row Data found successfully...")
+            print("inside if Matching Row Data found successfully...")
             user_input = json.dumps(user_otp_data)
 
-            mobileNumber = row['Mobile Number']
-            otp = row['OTP']
-            print("OTP Data =======================> ", mobileNumber, otp)
+            mobileNumber = str(row['Mobile Number'])
+            otp = str(row['OTP'])
             session['logged_in'] = True
             print("Session Data======>",session)
             
@@ -163,12 +186,47 @@ def getOtp():
             # userdata = {'userId': uname, 'id': row['Account Number'], 'name': row['Acc Holder Name'], 'balance': row['Account Balance']}
             print("otp Details =============>",otpDataRto)
             return jsonify({'result': otpDataRto},)
-        # else:
-        #     status=False
-        #     return jsonResponse("Invalid Credentials! please try again")
     else:
         status = False
         return jsonResponse("Mobile number is not registered,Please entyer registered mobile number ")
+
+@app.route('/varifyOtp',methods = ['POST', 'GET'])
+def varifyOtp(user_res):
+    print("======================================================>>>>>>>>>>>>>>>>>>>>")
+    data = pd.read_csv('D:\Erste POC\chatbot_improvemnt\Otp_validation_01.csv')
+    # user_otp_data = request.get_json()
+    print("user_res in getOtop()-- ",user_res)
+    user_otp_data = user_res
+
+    mobileNumber = validMobileNumber
+    print("validMobileNumber -> ",validMobileNumber)
+
+    for index, row in data.iterrows():
+        if(str(row['Mobile Number']) == mobileNumber):
+            status=True
+            print("inside if Matching Row Data found successfully...")
+            user_input = json.dumps(user_otp_data)
+
+            if(str(user_otp_data) == str(row['OTP'])):
+                mobileNumber = str(row['Mobile Number'])
+                otp = str(row['OTP'])
+                print("OTP Data =======================> ", mobileNumber, otp)
+
+           
+
+            session['logged_in'] = True
+            print("Session Data======>",session)
+            
+            # External Api Call and Display account data from Data.csv file when login successfull
+            otpDataRto = {'mobileNumber': mobileNumber, 'otpNumber': otp}
+            # userdata = {'userId': uname, 'id': row['Account Number'], 'name': row['Acc Holder Name'], 'balance': row['Account Balance']}
+            print("otp Details =============>",otpDataRto)
+            return jsonify({'result': otpDataRto},)
+    else:
+        status = False
+        return jsonResponse("invalid otp ")
+
+
 
 @app.route('/update', methods=['GET','POST','PUT'])
 def update():
